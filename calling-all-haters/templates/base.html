@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% block head %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{% endblock %}</title>
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="/static/script.js"></script>
+        <link rel="stylesheet" href="/static/style.css">
+        {% endblock %}
+    </head>
+    <body>
+        {% block body %}
+        <nav class="navbar" id="navbar">
+            {% block navbar %}
+            <a href="/" class="brand">Calling All <span>Haters</span></a>
+            <a href="/games">Games</a>
+            <a href="/leaderboards">Leaderboard</a>
+            <a href="/profile">Placeholder</a>
+            <a href="javascript:void(0);" class="icon" onclick="displayNavbar()"><i class="fa fa-bars"></i></a>
+            {% endblock %}
+        </nav>
+        <div class="game-status">
+            {% block status %}
+            <div class="col-1 col-s-4">
+                <span>Round:</span>
+                <span>0:00</span>
+            </div>
+            <div class="col-1 col-s-4">
+                <span>Round:</span>
+                <span>0:00</span>    
+            </div>
+            <div class="col-1 col-s-4">
+                <span>Round:</span>
+                <span>0:00</span>    
+            </div>
+            {% endblock %}
+        </div>
+        <div class="container">
+            {% block container %}
+            {% endblock %}
+        </div>
+        {% endblock %}
+    </body>
+</html>
