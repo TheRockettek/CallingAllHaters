@@ -2,10 +2,10 @@ from enum import Enum
 import hmac
 import sqlite3
 
+from datetime import datetime
 from quart import Quart, jsonify, render_template, request, session, websocket
 
 import utils
-import objects
 from compress import compress_response
 
 
@@ -44,40 +44,43 @@ async def get_user(id, fetch_from_name=False):
         )
     res = utils.sanitize_sqlite(cur, cur.fetchone(), isone=True)
     if res:
-        return objects.User(res)
+        return User(res)
     else:
         return None
 
 
 class Game:
-    __slots__ = ['players', 'settings', 'decks', 'db']
+    __slots__ = ['czar_index', 'decks', 'game_duration', 'players', 'settings', 'started_at']
 
     def __init__(self, data, host):
         self.settings = data
         self.players = []
         self.decks = []
+        self.czar_index = -1
+        self.started_at = datetime.utcnow()
+        self.game_duration = 0
 
 
 class Player:
-    __slots__ = ['name', 'display_name', 'id', 'points', 'deck', 'is_czar', 'is_host', 'is_guest', 'user']
+    __slots__ = ['deck', 'display_name', 'id', 'is_czar', 'is_guest', 'is_host', 'is_spectator', 'name', 'points', 'user']
 
-    def __init__(self, data):
-        self.user = data.get("user")
+    def __init__(self, user, data):
+        self.user = user
         self.is_czar = False
-        self.is_host = data.get("host")
-        self.is_guest = bool(self.user)
-        self.name = data.get("name")
+        self.is_host = data.get("is_host", False)
+        self.is_guest = data.get("is_guest", False)
+        self.is_spectator = data.get("is_spectator", False)
+        self.name = self.user.name
         self.display_name = data.get("display", self.name)
         self.id = data.get("id")
         self.points = 0
         self.deck = []
 
-    def from_data(self, data):
-        # Exports from how data is stored
-        pass
-
-    def to_data(self):
-        # Exports data to how data is stored
+    def to_data(self, safe=True):
+        # Exports data to how data is sent to users
+        # If safe, it means its data thats expectedto go to anyone
+        # this means that safe=False sends whats in the users deck
+        # (intended for that player only)
         pass
 
     def fill_deck(self, count):
@@ -86,15 +89,16 @@ class Player:
 
 
 class User:
-    __slots__ = ['name', 'id', 'games', 'total_points', 'total_wins']
+    __slots__ = ['games', 'id', 'is_guest', 'name', 'total_points', 'total_wins']
 
-    def __init__(self, data):
+    def __init__(self, data, is_guest):
         self.name = data.get("name")
         self.id = data.get("id")
         self.games = data.get("games", [])
         self._games = []
         self.total_points = data.get("total_points", 0)
         self.total_wins = data.get("total_wins", 0)
+        self.is_guest = is_guest
 
     async def fetch_games():
         # Converts games in game list to their game objects.
@@ -183,5 +187,6 @@ async def _game():
 # /api/discovery - Lists active games
 # /api/login - Endpoint for logging in
 # /api/register - Endpoint for registering
+
 
 app.run(host="0.0.0.0", port=80, debug=True)

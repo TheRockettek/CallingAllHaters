@@ -4,7 +4,6 @@ import datetime
 import uuid
 import base64
 import hmac
-import objects
 
 
 class NameAlreadyExists(Exception):

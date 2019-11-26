@@ -7,6 +7,15 @@ function displayNavbar() {
   }
 }
 
+function togglePopup() {
+  var x = document.getElementById("popup");
+  if (x.className === "popup-dim popup-hide") {
+    x.className = "popup-dim popup-show";
+  } else {
+    x.className = "popup-dim popup-hide";
+  }
+}
+
 function displayTitles(titles) {
   var html = "";
   titles.forEach(function(v) {
