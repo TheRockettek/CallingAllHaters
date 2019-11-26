@@ -1,21 +1,27 @@
 * {
     --page-style-a: #000000;
     --page-style-b: #FFFFFF;
-    --page-style-c: #CACACA;
+    --page-style-c: #E1E1E1;
     --page-style-d: #56CCF2;
     --page-style-e: #969696;
 }
 
 @font-face {
     font-family: "Helvetica Neue";
-    font-weight: normal;
-    src: url("/static/helvetica_medium.ttf");
+    font-weight: 400;
+    src: url("/static/helvetica_thin.ttf");
 }
 
 @font-face {
     font-family: "Helvetica Neue";
     font-weight: bold;
     src: url("/static/helvetica_bold.ttf");
+}
+
+@font-face {
+    font-family: "Helvetica Neue";
+    font-weight: 100;
+    src: url("/static/helvetica_medium.ttf");
 }
 
 a {
@@ -32,9 +38,25 @@ body {
 }
 
 .container {
+    width: 1000px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 1vw 2vw;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.splitter {
+    border-bottom: var(--page-style-a) 1px solid;
     width: 100%;
-    max-width: 1000px;
-    margin: auto;
+    height: 1px;
+}
+
+.container h5 {
+    margin: .75em auto;
+    width: 80%;
+    font-weight: 100;
+    font-size: small;
 }
 
 .game-status {
@@ -45,17 +67,93 @@ body {
     flex-wrap: wrap;
 }
 
-.game-status div {
-    margin: 8px 5px;
+.game-container {
+    margin: 0 auto;
     display: flex;
-    flex-wrap: wrap;
+    max-width: 500px;
+    margin: 5px auto;
+}
+
+.game-description {
+    width: -webkit-fill-available;
+    color: var(--page-style-b);
+    background: var(--page-style-a);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding: 6px;
+    border-radius: 5px 0 0 5px;
+}
+
+.game-description span {
+    font-weight: 400;
+    font-style: italic;
+}
+
+.game-description span span {
+    font-weight: 100;
+    font-style: normal;
+}
+
+.game-description .title {
+    font-weight: 600;
+    font-style: normal;
+    font-size: larger;
+}
+
+.game-buttons {
+    min-width: 20%;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-buttons button .lock {
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 25%;
+}
+
+
+.game-buttons button {
+    background: var(--page-style-b);
+    font-size: initial;
+    font-weight: 600;
+    min-height: 50px;
+    border: none;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    position: relative
+}
+
+.game-buttons a {
+    height: 50%;
+}
+
+.game-buttons a:first-child button {
+    border: var(--page-style-a) 1px solid;
+    border-radius: 0 5px 0 0;
+}
+
+.game-buttons a:last-child button {
+    border: var(--page-style-a) 1px solid;
+    border-top: none;
+    border-radius: 0 0 5px 0;
+}
+
+.game-status div {
     justify-content: center;
     width: min-content;
+    margin: 8px 5px;
+    flex-wrap: wrap;
+    display: flex;
 }
 
 .game-status div span:first-child {
-    font-size: 1em;
     padding-right: 2px;
+    font-size: 1em;
     margin: auto 0;
 }
 
@@ -65,8 +163,8 @@ body {
 }
 
 .navbar {
-    color: var(--page-style-b);
     background-color: var(--page-style-a);
+    color: var(--page-style-b);
     overflow: hidden;
     display: grid
 }
@@ -74,10 +172,10 @@ body {
 .navbar > a {
     float: left;
     display: block;
-    text-decoration: none;
     font-size: 17px;
     padding: 5px 10px;
     font-size: smaller;
+    text-decoration: none;
     margin: auto 0 auto 0;
 }
 .navbar > a:first-child {
@@ -103,7 +201,7 @@ body {
 
 .index-navbar {
     background: var(--page-style-a);
-    padding: 4vw 4vh 2vw;
+    padding: 20px;
 }
 
 .index-icon {
@@ -139,6 +237,34 @@ body {
     padding: 0 3%;
 }
 
+.index-items a:hover {
+    color: var(--page-style-e);
+}
+
+.button {
+    background: black;
+    color: white;
+    border: none;
+    padding: 10px 70px;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.button:hover {
+    color: rgba(255,255,255,.9);
+}
+
+input[type="text"] {
+    background: var(--page-style-c);
+    border: var(--page-style-e) 1px solid;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+input[type="text"]:hover {
+    background: rgba(0,0,0,.2);
+}
+
 @media only screen and (min-width: 600px) {
     .navbar {
         display: flex;
@@ -169,6 +295,9 @@ body {
       float: none;
       display: block;
       text-align: left;
+    }
+    .game-buttons button {
+        font-size: 65%;
     }
 }
 

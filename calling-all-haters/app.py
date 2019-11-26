@@ -1,24 +1,64 @@
-import random
-import string
+import hmac
+import sqlite3
 
-from compress import compress_response
 from quart import Quart, jsonify, render_template, request, session, websocket
 
+import utils
+import objects
+from compress import compress_response
 
-def generateHex(length=8):
-    return "".join(random.choices(list(string.hexdigits), k=8))
+
+async def validate_token(token, user=None):
+    valid, token_user_id, _session_hmac = utils.parse_token(token)
+    if not valid:
+        return False, utils.InvalidToken(f'Invalid format')
+
+    cur = db.cursor()
+    cur.execute('SELECT hmac FROM USERS WHERE id = ?', (token_user_id,))
+    res = utils.sanitize_sqlite(cur, cur.fetchone(), isone=True)
+    if not res:
+        return False, utils.InvalidToken(f'Could not find user with id "{user.id}" or retrieve their hmac value')
+
+    _id_bytes = user.id.to_bytes((user.id.bit_length() + 8) // 8, 'big', signed=True)
+    _uuid1_bytes = bytes.fromhex(res['hmac'])
+    _hmac = hmac.new(_id_bytes, _uuid1_bytes).digest()
+
+    if not hmac.compare_digest(_hmac, _session_hmac):
+        return False, utils.InvalidToken(f'Initial digest "{_hmac}" did not match session digest "{_session_hmac}"')
+
+    return True, user
+
+
+async def get_user(id, fetch_from_name=False):
+    cur = db.cursor()
+    if fetch_from_name:
+        cur.execute(
+            f'SELECT * FROM USERS WHERE name = ?',
+            (id,)
+        )
+    else:
+        cur.execute(
+            f'SELECT * FROM USERS WHERE id = ?',
+            (id,)
+        )
+    res = utils.sanitize_sqlite(cur, cur.fetchone(), isone=True)
+    if res:
+        return objects.User(res)
+    else:
+        return None
 
 
 class Game:
-    __slots__ = ['players', 'settings', 'decks']
+    __slots__ = ['players', 'settings', 'decks', 'db']
 
     def __init__(self, data, host):
         self.settings = data
         self.players = []
         self.decks = []
 
+
 class Player:
-    __slots__ = ['name', 'display_name', 'id', 'points', 'deck', 'is_czar', 'is_host', 'is_guest', 'user']
+    __slots__ = ['name', 'display_name', 'id', 'points', 'deck', 'is_czar', 'is_host', 'is_guest', 'user', 'db']
 
     def __init__(self, data):
         self.user = data.get("user")
@@ -33,7 +73,7 @@ class Player:
 
 
 class User:
-    __slots__ = ['name', 'id', 'games', 'total_points', 'total_wins']
+    __slots__ = ['name', 'id', 'games', 'total_points', 'total_wins', 'db']
 
     def __init__(self, data):
         self.name = data.get("name")
@@ -44,7 +84,7 @@ class User:
 
 
 class Deck:
-    __slots__ = ['name', 'id', 'white', 'black', 'empty']
+    __slots__ = ['name', 'id', 'white', 'black', 'empty', 'db']
 
     def __init__(self, data):
         self.name = data.get("name")
@@ -55,12 +95,14 @@ class Deck:
 
 
 app = Quart(__name__)
+db = sqlite3.connect("database.db")
 
 
 @app.route("/")
 @compress_response()
 async def _index():
     return await render_template("index.html")
+
 
 @app.route("/game")
 @compress_response()
