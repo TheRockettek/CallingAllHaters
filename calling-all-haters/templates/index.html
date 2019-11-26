@@ -11,9 +11,10 @@
 </nav>
 <div class="container">
     <h5>You're not logged in. By logging, in you can access previous games and be on the leaderboards.</h5>
-    <a><button class="button">Log In</button></a>
+    <button onclick="togglePopup('login')" class="button">Log In</button>
     <h5>or</h5>
-    <input type="text"> <button class="button">Play as Guest</button>
+    <input type="text">
+    <button class="button">Play as Guest</button>
 </div>
 <div class="splitter"></div>
 <div class="container">
@@ -33,10 +34,15 @@
         </div>
     </div>
 </div>
-<div id="popup" class="popup-dim popup-hide">
+<div id="login" class="popup-dim popup-hide">
     <div class="popup-container">
-        <div><span>title</span><a onclick="togglePopup()"><img class="lock" src="/static/close.svg"></a></div>
-        <div>A</div>
+        <div><span>Log In</span><a onclick="togglePopup('login')"><img class="lock" src="/static/close.svg"></a></div>
+        <div>
+            Username: <input type="text" placeholder="Username"><br>
+            Password: <input type="password" placeholder="Password" autocomplete="on"><br>
+            <button class="button">Log In</button>
+            <button class="button">Register</button>
+        </div>
     </div>
 </div>
 {% endblock %}

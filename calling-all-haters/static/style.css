@@ -248,7 +248,7 @@ body {
     border: none;
     padding: 10px 70px;
     border-radius: 5px;
-    margin: 5px 0;
+    margin: 5px;
 }
 
 .button:hover {
@@ -308,18 +308,20 @@ body {
     background: var(--page-style-b);
     color: var(--page-style-a);
     font-weight: 100;
-
+    text-align: center;
 }
 
 
-input[type="text"] {
+input[type="text"], input[type="password"] {
     background: var(--page-style-c);
     border: var(--page-style-e) 1px solid;
     padding: 5px;
     border-radius: 5px;
+    margin: 2px;
+    max-width: 80%;
 }
 
-input[type="text"]:hover {
+input[type="text"]:hover, input[type="password"]:hover {
     background: rgba(0,0,0,.2);
 }
 
