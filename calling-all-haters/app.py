@@ -1,3 +1,4 @@
+from enum import Enum
 import hmac
 import sqlite3
 
@@ -58,7 +59,7 @@ class Game:
 
 
 class Player:
-    __slots__ = ['name', 'display_name', 'id', 'points', 'deck', 'is_czar', 'is_host', 'is_guest', 'user', 'db']
+    __slots__ = ['name', 'display_name', 'id', 'points', 'deck', 'is_czar', 'is_host', 'is_guest', 'user']
 
     def __init__(self, data):
         self.user = data.get("user")
@@ -71,20 +72,45 @@ class Player:
         self.points = 0
         self.deck = []
 
+    def from_data(self, data):
+        # Exports from how data is stored
+        pass
+
+    def to_data(self):
+        # Exports data to how data is stored
+        pass
+
+    def fill_deck(self, count):
+        # Fills players deck with the specific number of white cards
+        pass
+
 
 class User:
-    __slots__ = ['name', 'id', 'games', 'total_points', 'total_wins', 'db']
+    __slots__ = ['name', 'id', 'games', 'total_points', 'total_wins']
 
     def __init__(self, data):
         self.name = data.get("name")
         self.id = data.get("id")
-        self.games = []
+        self.games = data.get("games", [])
+        self._games = []
         self.total_points = data.get("total_points", 0)
         self.total_wins = data.get("total_wins", 0)
 
+    async def fetch_games():
+        # Converts games in game list to their game objects.
+        pass
+
+    def from_data(self, data):
+        # Exports from how data is stored
+        pass
+
+    def to_data(self):
+        # Exports data to how data is stored
+        pass
+
 
 class Deck:
-    __slots__ = ['name', 'id', 'white', 'black', 'empty', 'db']
+    __slots__ = ['name', 'id', 'white', 'black', 'empty']
 
     def __init__(self, data):
         self.name = data.get("name")
@@ -92,6 +118,40 @@ class Deck:
         self.white = data.get("white", [])
         self.black = data.get("black", [])
         self.empty = data.get("empty", 0)
+
+    def from_data(self, data):
+        # Exports from how data is stored
+        pass
+
+    def to_data(self):
+        # Exports data to how data is stored
+        pass
+
+    def retrieve_black_card(self, filter=[]):
+        # Returns a random black card.
+        # If a filter is specified, it will ignore cards with that name
+        pass
+
+    def retrieve_white_card(self, filter=[], blank_cards=True):
+        # Returns a random white card.
+        # If a filter is specified, it will ignore cards with that name
+        # If blank cards is true, it will have a possibilty of returning a blank card
+        pass
+
+
+class CardType(Enum):
+    white_card = 0
+    black_card = 1
+    blank_card = 2
+
+
+class Card:
+    __slots__ = ['text', 'type', 'is_blank']
+
+    def __init__(self, text, _type, is_blank=False):
+        self.text = text
+        self.type = _type
+        self.is_blank = is_blank or self.type.value == 2
 
 
 app = Quart(__name__)
