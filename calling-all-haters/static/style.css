@@ -76,6 +76,8 @@ body {
 
 .game-description {
     width: -webkit-fill-available;
+    width: -moz-available;
+    width: fill-available;
     color: var(--page-style-b);
     background: var(--page-style-a);
     display: flex;
@@ -283,6 +285,7 @@ body {
     margin: auto;
     width: 70%;
     height: fit-content;
+    height: -moz-fit-content;
     max-width: 500px;
 }
 

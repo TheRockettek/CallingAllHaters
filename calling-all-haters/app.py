@@ -60,6 +60,9 @@ class Game:
         self.started_at = datetime.utcnow()
         self.game_duration = 0
 
+    def to_data(self):
+        pass
+
 
 class Player:
     __slots__ = ['deck', 'display_name', 'id', 'is_czar', 'is_guest', 'is_host', 'is_spectator', 'name', 'points', 'user']
@@ -160,6 +163,7 @@ class Card:
 
 app = Quart(__name__)
 db = sqlite3.connect("database.db")
+games = []
 
 
 @app.route("/")
@@ -173,6 +177,11 @@ async def _index():
 async def _game():
     return await render_template("game.html")
 
+
+@app.route("/api/discovery")
+@compress_response()
+async def _api_discovery():
+    return jsonify([game.to_data() for game in games])
 
 # / - Index page
 # /game - Page when in a game
