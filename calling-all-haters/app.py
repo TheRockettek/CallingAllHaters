@@ -44,7 +44,7 @@ async def get_user(id, fetch_from_name=False):
         )
     res = utils.sanitize_sqlite(cur, cur.fetchone(), isone=True)
     if res:
-        return User(res)
+        return User(res, False)
     else:
         return None
 
@@ -92,7 +92,7 @@ class Player:
 
 
 class User:
-    __slots__ = ['games', 'id', 'is_guest', 'name', 'total_points', 'total_wins']
+    __slots__ = ['games', 'id', 'is_guest', 'name', 'total_points', 'total_wins', '_games']
 
     def __init__(self, data, is_guest):
         self.name = data.get("name")
@@ -103,7 +103,7 @@ class User:
         self.total_wins = data.get("total_wins", 0)
         self.is_guest = is_guest
 
-    async def fetch_games():
+    async def fetch_games(self):
         # Converts games in game list to their game objects.
         pass
 
@@ -181,7 +181,35 @@ async def _game():
 @app.route("/api/discovery")
 @compress_response()
 async def _api_discovery():
-    return jsonify([game.to_data() for game in games])
+    # return jsonify([game.to_data() for game in games])
+    return jsonify([
+        {
+            "owner": "ImRock",
+            "players": ["ImRock", "YaBoi"],
+            "max_players": 4,
+            "point_goal": 8,
+            "decks": ["Base Game (Canada)", "Base Game (Australia)"],
+            "has_custom_deck": True,
+            "allow_guests": False,
+        },
+        {
+            "owner": "Rolo",
+            "players": ["Guest", "rolo"],
+            "max_players": 2,
+            "point_goal": 4,
+            "decks": ["Base Game (Canada)", "Base Game (International)"],
+            "has_custom_deck": False,
+            "allow_guests": True,
+        },
+    ])
+
+
+        # self.settings = data
+        # self.players = []
+        # self.decks = []
+        # self.czar_index = -1
+        # self.started_at = datetime.utcnow()
+        # self.game_duration = 0
 
 # / - Index page
 # /game - Page when in a game
