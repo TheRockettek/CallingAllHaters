@@ -1,46 +1,96 @@
-<!DOCTYPE html>
+ 
+ <!DOCTYPE html>
 <html>
     <head>
         {% block head %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}{% endblock %}</title>
-        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <script src="/static/script.js"></script>
-        <link rel="stylesheet" href="/static/style.css">
+        <script src="/static/script.js?4"></script>
+        <link rel="stylesheet" href="/static/style.css?2">
         {% endblock %}
     </head>
     <body>
         {% block body %}
-        <nav class="navbar" id="navbar">
-            {% block navbar %}
-            <a href="/" class="brand">Calling All <span>Haters</span></a>
-            <a href="/games">Games</a>
-            <a href="/leaderboards">Leaderboard</a>
-            <a href="/profile">Placeholder</a>
-            <a href="javascript:void(0);" class="icon" onclick="displayNavbar()"><i class="fa fa-bars"></i></a>
-            {% endblock %}
+        <nav class="index-navbar">
+            <a href="/"><h1 class="index-icon">Calling All <span>Haters</span></h1></a>
+            <h5>Another horrendous <a href="https://cardsagainsthumanity.com/">cards against humanity</a> clone.</h5>
+            <div class="index-items">
+                <a href="/">Discovery</a>
+                <a href="/leaderboards">Leaderboard</a>
+                {% if session %}
+                <a href="/games">{{ session.get("data", {}).get("name") }} {{ " (guest)" if session.get("data", {}).get("is_guest") else ""}}</a>
+                <a href="/logout">Logout</a>
+                {% else %}
+                <a onclick="togglePopup('login')">Log In</a>
+                {% endif %}
+            </div>
         </nav>
-        <div class="game-status">
-            {% block status %}
-            <div class="col-1 col-s-4">
-                <span>Round:</span>
-                <span>0:00</span>
-            </div>
-            <div class="col-1 col-s-4">
-                <span>Round:</span>
-                <span>0:00</span>    
-            </div>
-            <div class="col-1 col-s-4">
-                <span>Round:</span>
-                <span>0:00</span>    
-            </div>
-            {% endblock %}
-        </div>
+        {% if not session %}
         <div class="container">
-            {% block container %}
-            {% endblock %}
+            <h5>You're not logged in. By logging, in you can create games, access previous games and be on the leaderboards.</h5>
+            <button onclick="togglePopup('login')" class="button">Log In</button>
+            <h5>or</h5>
+            <form>
+            <input id="play-guest-username" type="text" placeholder="Username" autocomplete="on">
+            <button onclick="loginAsGuest(true); return false;"class="button">Play as Guest</button>
+            </form>
+            <br><span id="guest-login-error"></span>
         </div>
+        <div class="splitter"></div>
+        {% endif %}
+
+        <noscript>Your browser does not support scripts or has disabled it. You kinda need it on to be able to play...</noscript>
+        {% block container %}
+        <div class="container">
+        </div>
+        {% endblock %}
+        {% block popups %}
+        <div id="information" class="popup-dim popup-hide">
+            <div class="popup-container">
+                <div><span>Information</span><a onclick="togglePopup('information'); document.cookie = 'confirmed_info=true;path=/;'"><img class="lock" src="/static/close.svg"></a></div>
+                <div>
+                    CallingAllHaters is a cards against humanity clone, available at <a href="https://www.cardsagainsthumanity.com/">cardsagainsthumanity.com</a>, where you can buy or print it out yourself. It is (at the time of production) distributed under the <a href="https://creativecommons.org/licenses/by-nc-sa/2.0/">Creative Commons - Attribution - Noncommercial - Share Alike license</a>.<br><br>This web version is in no way endorsed or sponsored by Cards Against Humanity and you can view the source code <a href="https://github.com/TheRockettek/CallingAllHaters">here</a>.<br><br>This game was tested on chrome and will not work on Internet Explorer or older browsers. Other browsers such as firefox may have some problems with positions however should still be playable. If there are any major issues, submit a <a href="https://github.com/TheRockettek/CallingAllHaters/issues/new">bug report on the github</a> with a screenshot and browser information.<br><br>If you experience any sort of desyncs, restarting the browser will usually fix it, else report a bug and attach a console log. Do not open the game more than once per browser.
+                </div>
+            </div>
+        </div>
+        <div id="login" class="popup-dim popup-hide">
+            <div class="popup-container">
+                <div><span>Log In</span><a onclick="togglePopup('login')"><img class="lock" src="/static/close.svg"></a></div>
+                <div>
+                    <form>
+                    Username: <input id="login-username" name="username" type="text" placeholder="Username"><br>
+                    Password: <input id="login-password" name="password" type="password" placeholder="Password" autocomplete="on"><br>
+                    <button onclick="login(); return false;" class="button">Log In</button>
+                    <button onclick="register(); return false;" class="button">Register</button><br>
+                    </form>
+                    <span id="login-error"></span>
+                    <h5>or</h5>
+                    <form>
+                    <input id="guest-username" type="text" placeholder="Username" autocomplete="on">
+                    <button onclick="loginAsGuest();  return false;"class="button">Play as Guest</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="error-popup" class="popup-dim popup-hide">
+            <div class="popup-container">
+                <div><span id="error-popup-title"></span><a onclick="togglePopup('error-popup');"><img class="lock" src="/static/close.svg"></a></div>
+                <div>
+                    <span id="error-popup-desc"></span>
+                </div>
+            </div>
+        </div>
+        <script>
+        $(_ => {
+            if (get_cookie("confirmed_info") != "true") {
+                togglePopup('information');
+            }
+        })
+        </script>
+                
+        {% endblock %}
         {% endblock %}
     </body>
 </html>

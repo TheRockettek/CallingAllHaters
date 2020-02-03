@@ -20,9 +20,8 @@ class Compress:
         app = self.app or current_app
         accept_encoding = request.headers.get("Accept-Encoding", "")
 
-        if ("gzip" not in accept_encoding.lower() or "Content-Encoding" in response.headers or (response.content_length is not None and response.content_length < 500)):
+        if (not ("gzip" in accept_encoding.lower() or "br" in accept_encoding.lower()) or "Content-Encoding" in response.headers or (response.content_length is not None and response.content_length < 500)):
             return response
-
         response.direct_passthrough = False
 
         gzip_content = await self.compress(app, response)
@@ -42,19 +41,20 @@ class Compress:
 
     async def compress(self, app, response):
         gzip_buffer = BytesIO()
+        accept_encoding = request.headers.get("Accept-Encoding", "")
 
         if inspect.iscoroutinefunction(response.get_data):
             data = await response.get_data()
         else:
             data = response.get_data()
 
-        if response.mimetype not in ["application/octet-stream", "application/javascript", "application/json"]:
+        if response.mimetype not in ["application/octet-stream", "application/javascript", "application/json"] and "image" not in response.mimetype:
             data = htmlmin.minify(data.decode(), remove_empty_space=True, reduce_boolean_attributes=True, convert_charrefs=True, remove_comments=True).encode("utf-8")
 
-        with GzipFile(mode="wb", compresslevel=6, fileobj=gzip_buffer) as gzip_file:
-            gzip_file.write(data)
-
-        return gzip_buffer.getvalue()
+        if "gzip" in accept_encoding:
+            with GzipFile(mode="wb", compresslevel=6, fileobj=gzip_buffer) as gzip_file:
+                gzip_file.write(data)
+            return gzip_buffer.getvalue()
 
 
 _compress = Compress()

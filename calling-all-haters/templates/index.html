@@ -1,51 +1,15 @@
 {% extends "base.html" %}
-{% block body %}
-<nav class="index-navbar">
-    <h1 class="index-icon">Calling All <span>Haters</span></h1>
-    <h5>Another horrendous <a href="https://cardsagainsthumanity.com/">cards against humanity</a> clone.</h5>
-    <div class="index-items">
-        <a href="/games">Games</a>
-        <a href="/leaderboards">Leaderboard</a>
-        <a href="/profile">Placeholder</a>
-    </div>
-</nav>
+{% block container %}
 <div class="container">
-    <h5>You're not logged in. By logging, in you can access previous games and be on the leaderboards.</h5>
-    <button onclick="togglePopup('login')" class="button">Log In</button>
-    <h5>or</h5>
-    <input type="text">
-    <button class="button">Play as Guest</button>
-</div>
-<div class="splitter"></div>
-<div class="container">
+    <button onclick="createGame()" class="button">Create Game</button>
+    <button onclick="discoverGames(get_key(data, 'is_guest', true))" class="button">Refresh Listing</button>
     <h5>Current Games:</h5>
-    <div>
-        <div class="game-container">
-            <div class="game-description">
-                <span class="title">ImRock's Game - 0/0</span>
-                <span>Players: <span>ImRock, YaBoi</span></span>
-                <span>Point Goal: <span>0</span></span>
-                <span>Decks: <span>Custom</span></span>
-            </div>
-            <div class="game-buttons">
-                <a><button>Spectate</button></a>
-                <a><button>Join<img class="lock" src="/static/lock-alert.svg"></button></a>
-            </div>    
-        </div>
-    </div>
-</div>
-<div id="login" class="popup-dim popup-hide">
-    <div class="popup-container">
-        <div><span>Log In</span><a onclick="togglePopup('login')"><img class="lock" src="/static/close.svg"></a></div>
-        <div>
-            Username: <input type="text" placeholder="Username"><br>
-            Password: <input type="password" placeholder="Password" autocomplete="on"><br>
-            <button class="button">Log In</button>
-            <button class="button">Register</button>
-        </div>
+    <div class="game-discovery">
     </div>
 </div>
 <script>
-
+$(_ => {
+    discoverGames(get_key(data, "is_guest", true))
+})
 </script>
 {% endblock %}

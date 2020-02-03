@@ -4,6 +4,8 @@
     --page-style-c: #E1E1E1;
     --page-style-d: #56CCF2;
     --page-style-e: #969696;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 @font-face {
@@ -25,7 +27,7 @@
 }
 
 a {
-    color: white;
+    color: inherit;
 }
 
 body {
@@ -37,6 +39,13 @@ body {
     display: table;
 }
 
+.hidden {
+    display: none !important;
+    visibility: hidden;
+    width: 0px;
+    height: 0px;
+}
+
 .container {
     width: 1000px;
     max-width: 100%;
@@ -44,6 +53,23 @@ body {
     padding: 1vw 2vw;
     box-sizing: border-box;
     text-align: center;
+}
+
+#current-link {
+    color: var(--page-style-d)
+}
+
+#game-password {
+	text-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+.container span {
+    font-weight: 100;
+}
+
+.won {
+    background: var(--page-style-a);
 }
 
 .splitter {
@@ -59,6 +85,14 @@ body {
     font-size: small;
 }
 
+.gamepacks {
+    font-size: x-small;
+}
+
+.deck-select span {
+    user-select: none;
+}
+
 .game-status {
     display: flex;
     text-align: center;
@@ -67,11 +101,21 @@ body {
     flex-wrap: wrap;
 }
 
+.oneliner div {
+    width: auto !important;
+}
+
 .game-container {
-    margin: 0 auto;
     display: flex;
-    max-width: 500px;
-    margin: 5px auto;
+    max-width: 400px;
+    margin: 5px;
+}
+
+.game-discovery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-weight: 100;
 }
 
 .game-description {
@@ -90,6 +134,7 @@ body {
 .game-description span {
     font-weight: 400;
     font-style: italic;
+    font-size: small;
 }
 
 .game-description span span {
@@ -120,8 +165,8 @@ body {
 
 
 .game-buttons button {
+    font-size: 80%;
     background: var(--page-style-b);
-    font-size: initial;
     font-weight: 600;
     min-height: 50px;
     border: none;
@@ -138,6 +183,8 @@ body {
 .game-buttons a:first-child button {
     border: var(--page-style-a) 1px solid;
     border-radius: 0 5px 0 0;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .game-buttons a:last-child button {
@@ -158,11 +205,14 @@ body {
     padding-right: 2px;
     font-size: 1em;
     margin: auto 0;
+    font-weight: 100;
+    width: max-content;
 }
 
 .game-status div span:last-child {
     font-weight: bold;
     font-size: 1.5em;
+    margin: auto;
 }
 
 .navbar {
@@ -210,7 +260,7 @@ body {
 .index-icon {
     color: var(--page-style-b);
     line-height: 80%;
-    font-size: 34px;
+    font-size: 26px;
     margin: 0;
     width: 0;
 }
@@ -238,6 +288,7 @@ body {
     text-decoration: none;
     margin: auto 0;
     padding: 0 3%;
+    width: fit-content;
 }
 
 .index-items a:hover {
@@ -251,6 +302,8 @@ body {
     padding: 10px 70px;
     border-radius: 5px;
     margin: 5px;
+    max-width: -webkit-fill-available;
+    box-sizing: border-box;
 }
 
 .button:hover {
@@ -287,31 +340,35 @@ body {
     height: fit-content;
     height: -moz-fit-content;
     max-width: 500px;
+    max-height: 100vh;
 }
 
-.popup-container div:first-child {
+.popup-container > div:first-child {
     padding: 10px;
     border-radius: 5px 5px 0 0;
     border: var(--page-style-b) 1px solid;
     background: var(--page-style-a);
     color: var(--page-style-b);
     font-weight: 600;
+    height: 25px;
 }
 
-.popup-container div:first-child img {
+.popup-container > div:first-child img {
     position: absolute;
     top: 6px;
     right: 6px;
     color: var(--page-style-b);
 }
 
-.popup-container div:nth-child(2) {
+.popup-container > div:nth-child(2) {
     padding: 10px;
     border-radius: 0 0 5px 5px;
     background: var(--page-style-b);
     color: var(--page-style-a);
     font-weight: 100;
     text-align: center;
+    overflow-y: auto;
+    max-height: 75vh;
 }
 
 
@@ -321,12 +378,211 @@ input[type="text"], input[type="password"] {
     padding: 5px;
     border-radius: 5px;
     margin: 2px;
-    max-width: 80%;
 }
 
 input[type="text"]:hover, input[type="password"]:hover {
     background: rgba(0,0,0,.2);
 }
+
+.leaderboards-self {
+    color: var(--page-style-d);
+}
+
+.leaderboards-container {
+    width: 90%;
+    max-width: 500px;
+    font-weight: 100;
+    background: var(--page-style-a);
+    padding: 20px 5px;
+    color: var(--page-style-b);
+    display: grid;
+    flex-direction: column;
+    margin: auto;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.black-card {
+    background: var(--page-style-a);
+    color: var(--page-style-b);
+    padding: 15px;
+    border-radius: 5px;
+    width: fit-content;
+    margin: auto;
+    font-size: small;
+    font-weight: 400;
+    line-height: 16px;
+}
+
+.black-card .card-content span {
+    color: var(--page-style-d);
+}
+
+.black-card .card-information {
+    text-align: left;
+    margin: 10px 0;
+    font-size: smaller;
+    vertical-align: middle;
+}
+
+.black-card .card-information span:first-child {
+    background: var(--page-style-b);
+    color: var(--page-style-a);
+    vertical-align: middle;
+    padding: 4px;
+    margin-right: 4px;
+    
+}
+
+.white-card {
+    background: var(--page-style-a);
+    color: var(--page-style-b);
+    padding: 10px;
+    border-radius: 5px;
+    margin: 4px auto;
+    display: flex;
+    font-size: small;
+    font-weight: 400;
+    line-height: 16px;
+    width: 600px;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 0;
+}
+
+.white-card-stack {
+    background: var(--page-style-a);
+    color: var(--page-style-b);
+    padding: 10px;
+    border-radius: 5px;
+    margin: 4px auto;
+    display: flex;
+    font-size: small;
+    font-weight: 400;
+    line-height: 16px;
+    box-sizing: border-box;
+    border: 0;
+}
+
+.card-stack > div {
+    width: 100%;
+}
+
+.white-card span {
+    margin: auto;
+}
+
+.white-card img {
+    margin: auto 4px;
+    visibility: hidden;
+}
+
+.white-card .selected {
+    visibility: visible;
+}
+
+.white-card-stack .selected {
+    visibility: visible;
+}
+
+.scoreboard {
+    background: var(--page-style-a);
+    color: var(--page-style-b);
+    width: 500px;
+    max-width: 100%;
+    margin: 4px auto;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.scoreboard div {
+    display: flex;
+    margin: 3px 0;
+}
+
+.scoreboard span {
+    margin: auto 4px;
+}
+
+.scoreboard .scoreboard-score {
+    background: var(--page-style-b);
+    color: var(--page-style-a);
+    vertical-align: middle;
+    padding: 4px 8px;
+    margin-right: 4px;
+}
+
+.card-stack {
+    width: 600px;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 4px auto;
+    padding: 5px;
+    border: 1px var(--page-style-a) solid;
+    border-radius: 5px;
+    display: flex;
+}
+
+.card-stack .selected {
+    visibility: visible;
+}
+
+.card-stack img {
+    margin: auto 4px;
+    visibility: hidden;
+}
+
+.settings-container {
+    text-align: center;
+    padding: 2vw;
+    border-bottom: solid var(--page-style-a) 1px;
+}
+
+.settings {
+    display: grid;
+    grid-column-gap: 10px;
+    row-gap: 2px;
+    width: 400px;
+    max-width: 100%;
+    margin: auto;
+    grid-template-columns: max-content auto;
+    overflow-x: auto;
+}
+
+.settings span {
+    grid-column: 1;
+    text-align: right;
+    vertical-align: middle;
+    margin: auto 0;
+}
+
+.settings div {
+    grid-column: 2;
+    display: flex;
+}
+
+.settings div input {
+    width: -webkit-fill-available;
+}
+
+.settings input, .settings select, .settings button {
+    grid-column: 2;
+    background: var(--page-style-c);
+    border: var(--page-style-e) 1px solid;
+    padding: 5px;
+    border-radius: 5px;
+    margin: auto 2px;
+
+}
+
+.deck-select {
+    display: flex;
+    flex-direction: column;
+}
+
 
 @media only screen and (min-width: 600px) {
     .navbar {
@@ -335,9 +591,20 @@ input[type="text"]:hover, input[type="password"]:hover {
     .navbar a {
         padding: 14px 10px;  
     }
+    .white-card {
+        width: 200px;
+        height: 200px;
+    }
+    .white-card span {
+        margin: 0 auto 0 0;
+        text-align: left;
+    }
 }
 
 @media only screen and (max-width: 600px) {
+    .settings span {
+        font-size: x-small;
+    }
     .navbar > a:first-child {
         font-size: large;
     }
@@ -358,9 +625,6 @@ input[type="text"]:hover, input[type="password"]:hover {
       float: none;
       display: block;
       text-align: left;
-    }
-    .game-buttons button {
-        font-size: 65%;
     }
 }
 
@@ -398,4 +662,61 @@ input[type="text"]:hover, input[type="password"]:hover {
 .col-10 {width: 83.33%;}
 .col-11 {width: 91.66%;}
 .col-12 {width: 100%;}
+}
+
+
+[data-tooltip] {
+    position: relative;
+    cursor: pointer;
+}
+
+/* Hide the tooltip content by default */
+[data-tooltip]:before,
+[data-tooltip]:after {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Position tooltip above the element */
+[data-tooltip]:before {
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    margin-bottom: 5px;
+    margin-left: -80px;
+    padding: 7px;
+    width: 160px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    background-color: var(--page-style-b);
+    color: var(--page-style-a);
+    border: var(--page-style-a) 1px solid;
+    content: attr(data-tooltip);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-tooltip]:after {
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    margin-left: -5px;
+    width: 0;
+    border-top: 5px solid var(--page-style-a);
+    border-right: 5px solid transparent;
+    border-left: 5px solid transparent;
+    content: " ";
+    font-size: 0;
+    line-height: 0;
+}
+
+/* Show tooltip content on hover */
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after {
+    visibility: visible;
+    opacity: 1;
 }

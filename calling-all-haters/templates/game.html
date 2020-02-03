@@ -1,1 +1,120 @@
 {% extends "base.html" %}
+{% block body %}
+<nav class="navbar" id="navbar">
+    <a href="/" class="brand">Calling All <span>Haters</span></a>
+    <a href="/leaderboards">Leaderboard</a>
+    <a href="/games">{{ session.get("data", {}).get("name") }} {{ " (guest)" if session.get("data", {}).get("is_guest") else ""}}</a>
+    <a href="javascript:void(0);" class="icon" onclick="displayNavbar()"><i class="fa fa-bars"></i></a>
+</nav>
+<div class="game-status">
+</div>
+<div id="settings-container" class="container hidden">
+    <h5>Game Settings:</h5>
+    <form>
+    <div class="settings">
+        <span>Score Limit:</span><input id="settings-score-limit" type="number" min="1" value="1">
+        <span>Timer Limit:</span><select id="settings-timer-limit">
+            <option value="0.25">(0.25x) 0:15</option>
+            <option value="0.5">(0.50x) 0:30</option>
+            <option value="1" selected>(1x) 1:00</option>
+            <option value="1.50">(1.50x) 1:30</option>
+            <option value="2">(2x) 2:00</option>
+            <option value="2.5">(2.50x) 2:30</option>
+            <option value="3">(3x) 3:00</option>
+            <option value="4">(4x) 4:00</option>
+            <option value="5">(5x) 5:00</option>
+            <option value="10">(10x) 10:00</option>
+        </select>
+        <span>Player Limit:</span><div><input type="checkbox" id="settings-player-limit-enabled"><input type="number" min="2" value="" id="settings-player-limit"></div>
+        <span>Password:</span><div><input type="checkbox" id="settings-password-enabled"><input type="password" id="settings-password" autocomplete="off"></div>
+		<span>Show Password:</span><input type="checkbox" id="settings-password-show">
+        <span>Allow Guests:</span><input type="checkbox" id="settings-allow-guests">
+        <span>Game Packs:</span><div><input hidden id="settings-game-packs"><input disabled type="text" id="settings-game-packs-preview"><button onclick="loadDecks();togglePopup('game-decks');return false;">Edit</button></div>
+        <span>Custom Packs:</span><input type="text" id="settings-custom-game-packs"><span style="grid-column: 2; text-align: left; font-size: x-small;">Separate custom pack ids with commas (if multiple)</span>
+    </div>
+    <button onclick="app.saveSettings(); return false;" class="button">Apply Changes</button>
+    <button onclick="app.startGame(); return false;" class="button">Start Game</button>
+    </form>
+</div>
+<div id="settings-container-splitter" class="splitter"></div>
+<div id="lobby-container" class="container hidden">
+    <h5>Waiting for the host to start...</h5>
+    <h1 id="game-password" class="hidden">Password: <b></b></h1>
+    <h5 id="scoreboard"></h5>
+    <div class="scoreboard">
+    </div>
+    <h5 id="gamepack">Game Packs:</h5>
+    <div class="scoreboard gamepacks">
+    </div>
+</div>
+<div id="board-container" class="container hidden">
+    <h5>The black card for this round is:</h5>
+    <div class="black-card">
+        <div class="card-content">
+            This is default text on the black card <span>example filled in</span> or maybe <span>____________</span>?
+        </div>
+        <div class="card-information">
+            <span>UK</span>
+            <span>Pick <b>2</b> cards</span>
+        </div>
+    </div>
+    <div class="card-selection hidden">
+        <button class="white-card">
+            <span class="card-content">This is text you submitted</span>
+            <img class="check selected" src="/static/check.svg">
+        </button>
+        <button class="card-stack">
+            <img class="check selected" src="/static/check-alt.svg">
+        </button>
+    </div>
+    <div id="selection-buttons">
+    </div>
+    <div class="scoreboard">
+        <div>
+            <span class="scoreboard-score">1</span> <span>ImRock</span> <img src="/static/timer.svg">
+        </div>
+    </div>
+</div>
+<div id="error-popup" class="popup-dim popup-hide">
+    <div class="popup-container">
+        <div><span id="error-popup-title"></span><a onclick="togglePopup('error-popup');"><img class="lock" src="/static/close.svg"></a></div>
+        <div>
+            <span id="error-popup-desc"></span>
+        </div>
+    </div>
+</div>
+<div id="game-password-popup" class="popup-dim popup-hide">
+    <div class="popup-container">
+        <div><span id="error-popup-title"></span><a onclick="togglePopup('game-password-popup');"><img class="lock" src="/static/close.svg"></a></div>
+        <div>
+            <span id="error-popup-desc">
+                <h5>This game is password protected, enter the password to join the game</h5>
+                <form>
+                <input type="password" autocomplete="off" id="password-input" placeholder="Enter game password" autocomplete="no"><br>
+                <button class="button" onclick="togglePopup('game-password'); connectGame();return false;">Enter Game</button>
+                </form>
+            </span>
+        </div>
+    </div>
+</div>
+<div id="game-decks" class="popup-dim popup-hide">
+    <div class="popup-container">
+        <div><span id="error-popup-title">Select decks you want in the game</span><a onclick="togglePopup('game-decks');"><img class="lock" src="/static/close.svg"></a></div>
+        <div>
+            <span id="error-popup-desc">
+                <button class="button" onclick="$('.deck-select input').toArray().forEach(a => {a.checked = true}); return false;">Enable All</button>
+                <button class="button" onclick="$('.deck-select input').toArray().forEach(a => {a.checked = false}); return false;">Disable All</button>
+                <div class="deck-select"></div>
+                <form>
+                <button class="button" onclick="addDecks(); togglePopup('game-decks'); return false;">Confirm</button>
+                </form>
+            </span>
+        </div>
+    </div>
+</div>
+<script>
+$(_ => {
+    connectGame();
+})
+</script>
+{% endblock %}

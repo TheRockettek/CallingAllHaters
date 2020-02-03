@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block container %}
+<div class="container">
+    <h5 id="leaderboards-wins-caption">Total Wins:</h5>
+    <div id="leaderboards-wins" class="leaderboards-container">
+        <span class="leaderboards-self">ImRock - 15 wins</span>
+        <span>ImRock - 15 wins</span>
+        <span>ImRock - 15 wins</span>
+    </div>
+    <h5 id="leaderboards-points-caption">Total Points:</h5>
+    <div id="leaderboards-points" class="leaderboards-container">
+        <span class="leaderboards-self">ImRock - 15 wins</span>
+        <span>ImRock - 15 wins</span>
+        <span>ImRock - 15 wins</span>
+    </div>
+</div>
+<script>
+$(_ => {
+    retrieveLeaderboards()
+})
+</script>
+{% endblock %}

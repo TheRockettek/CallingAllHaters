@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block body %}
+<nav class="navbar" id="navbar">
+    <a href="/" class="brand">Calling All <span>Haters</span></a>
+    <a href="/leaderboards">Leaderboard</a>
+    <a href="/games">{{ session.get("data", {}).get("name") }} {{ " (guest)" if session.get("data", {}).get("is_guest") else ""}}</a>
+    <a href="javascript:void(0);" class="icon" onclick="displayNavbar()"><i class="fa fa-bars"></i></a>
+</nav>
+<div class="container">
+</div>
+<script>
+$(_ => {
+    retrieveGames();
+})
+</script>
+{% endblock %}
