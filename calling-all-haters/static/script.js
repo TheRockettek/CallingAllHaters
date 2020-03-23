@@ -433,7 +433,7 @@ function displayBlackcard(card, picked, convert=false) {
     ).append(` card${cards_selected == 1 ? '' : 's'} then confirm your selection.`).appendTo(labels);
     $("<button>").on("click", _ => {
       submitSelection(); return false;
-    }).addClass("button").text("Confirm Selection").appendTo(labels);
+    }).addClass("button").text("Confirm Selection").attr("id", "confirmButton").appendTo(labels);
     $(".black-card").empty().append(card_content).append(card_information);
   }
 }
@@ -447,7 +447,7 @@ function renderDeck() {
       if (app.state == 3) {
         $("<button>").on("click", _ => {
           submitSelection(); return false;
-        }).addClass("button").text("Confirm Selection").appendTo(labels);
+        }).addClass("button").text("Confirm Selection").attr("id", "confirmButton").appendTo(labels);
       }
     } else {
       if (app.state == 3) {
@@ -513,6 +513,10 @@ function renderDeck() {
       }
     }
   }
+  if (app.submitted.indexOf(data.id) != -1) {
+    $(".white-card").attr("disabled", true);
+    $("#confirmButton").attr("disabled", true);
+  }
 }
 function handleSelection(clickInformation) {
   if (app.state == 2) {
@@ -558,6 +562,8 @@ function submitSelection() {
         "e": "PLAYER_SELECT",
         "d": cards
       }))
+      $(".white-card").attr("disabled", true);
+      $("#confirmButton").attr("disabled", true);
     }
   }
   if (app.state == 3 && app.players[data.id].is_czar && app.played.length == 1) {
@@ -566,6 +572,8 @@ function submitSelection() {
       "e": "CZAR_SELECT",
       "d": app.played[0]
     }))
+    $(".white-card").attr("disabled", true);
+    $("#confirmButton").attr("disabled", true);
   }
 }
 
@@ -634,6 +642,7 @@ function connectGame() {
   app.common_title = [];
   app.display_timer = false;
   app.timer_ending = 0;
+  app.submitted = [];
 
   app.ntp_offset = 0;
   retrieveNTP();
@@ -802,6 +811,18 @@ addAppEvent("ROUND_UPDATE", function(d, m) {
   app.winner_id = 0;
   app.others_played = d.played;
   var state_change = false;
+  app.submitted = [];
+  d.played.forEach(k => {
+    if (typeof(k) == "object") {
+      if (k.length > 0) {
+        app.submitted.push(k[0])
+      }
+    }
+  })
+  if (app.submitted.indexOf(data.id) != -1) {
+    $(".white-card").attr("disabled", true);
+    $("#confirmButton").attr("disabled", true);
+  }
   if (m.s != app.state) {
     console.debug(`State changed from ${app.state} to ${m.s}`);
     app.state = m.s;

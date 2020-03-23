@@ -60,7 +60,6 @@ body {
 }
 
 #game-password {
-	text-wrap: break-word;
 	overflow-wrap: break-word;
 }
 
@@ -583,6 +582,9 @@ input[type="text"]:hover, input[type="password"]:hover {
     flex-direction: column;
 }
 
+#confirmButton:disabled {
+    background: var(--page-style-d);
+}
 
 @media only screen and (min-width: 600px) {
     .navbar {
@@ -590,14 +592,6 @@ input[type="text"]:hover, input[type="password"]:hover {
     }
     .navbar a {
         padding: 14px 10px;  
-    }
-    .white-card {
-        width: 200px;
-        height: 200px;
-    }
-    .white-card span {
-        margin: 0 auto 0 0;
-        text-align: left;
     }
 }
 

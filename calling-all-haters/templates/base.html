@@ -7,8 +7,8 @@
         <title>{% block title %}{% endblock %}</title>
         <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <script src="/static/script.js?4"></script>
-        <link rel="stylesheet" href="/static/style.css?2">
+        <script src="/static/script.js?{{ time() }}"></script>
+        <link rel="stylesheet" href="/static/style.css?{{ time() }}">
         {% endblock %}
     </head>
     <body>

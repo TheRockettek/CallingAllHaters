@@ -144,7 +144,7 @@ class Round:
         if reveal_played:
             data["played"] = list([player.id, [c.to_data() for c in card]] for player, card in self.played.values())
         else:
-            data["played"] = [""] * len(self.played)
+            data["played"] = list([player_id, None] for player_id in self.played.keys())
 
         if self.winning:
             data["winning"] = self.winning.to_data()
@@ -682,6 +682,9 @@ class Heartbeat:
 logging.getLogger().setLevel(logging.DEBUG)
 app = Quart(__name__)
 app.secret_key = "wglfULERHGGFBUPY"
+def gettime():
+    return int(time.time())
+app.jinja_env.globals['time'] = gettime
 Compress(app)
 
 
@@ -1029,7 +1032,17 @@ async def _games():
 
 @app.route("/games/<id>")
 async def _games_view(id):
-    return "hi"
+    id = utils.decodeid(id)
+    cur = db.cursor()
+    cur.execute('SELECT * FROM GAMES WHERE id = ?', (id,))
+    fetches = cur.fetchall()
+    if len(fetches) > 0:
+        round_data = utils.sanitize_sqlite(cur, fetches[0], isone=True)
+        round_data['players'] = json.loads(round_data['players'])
+        round_data['rounds'] = json.loads(round_data['rounds'])
+        return jsonify({"success": True, "results": round_data})
+    else:
+        return jsonify({"success": False, "results": None})
 
 @app.route("/logout")
 async def _logout():
@@ -1063,7 +1076,6 @@ async def _api_leaderboards():
     data = {"wins": total_wins[:10], "points": total_points[:10]}
     _id = session.get("data", {}).get("id", None)
     if _id:
-        print(total_wins)
         wpos = [n for n, v in enumerate(total_wins) if v['id'] == _id]
         ppos = [n for n, v in enumerate(total_points) if v['id'] == _id]
         if wpos and ppos:

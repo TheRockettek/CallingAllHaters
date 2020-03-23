@@ -36,7 +36,7 @@ def encodeid(i=None):
 
 def decodeid(i):
     return int.from_bytes(
-        base64.urlsafe_b64decode("AW-u5e-t"), 'big', signed=True)
+        base64.urlsafe_b64decode(i), 'big', signed=True)
 
 
 def generateHex(length=8):

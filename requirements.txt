@@ -1,3 +1,2 @@
-aiosqlite==0.10.0
 htmlmin==0.1.12
 Quart==0.10.0
