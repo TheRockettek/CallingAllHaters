@@ -646,7 +646,6 @@ function connectGame() {
 
   app.ntp_offset = 0;
   retrieveNTP();
-  setInterval(retrieveNTP, 60000);
 
   app.timestamp = function() {
     return (new Date()).valueOf() + app.ntp_offset;
