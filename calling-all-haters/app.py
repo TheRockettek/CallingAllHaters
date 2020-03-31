@@ -1231,4 +1231,4 @@ async def _api_packs_default():
 
 host_name = socket.gethostname()
 print(f"Host IP: {socket.gethostbyname(host_name)}")
-app.run(host="0.0.0.0", port=80, debug=True)
+app.run(host=utils.HOST, port=utils.PORT, debug=utils.DEBUG)

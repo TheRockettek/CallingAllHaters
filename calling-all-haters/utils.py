@@ -7,6 +7,11 @@ import hmac
 import time
 from datetime import datetime
 
+# Config for website
+HOST = "0.0.0.0"
+PORT = 42069
+DEBUG = True
+
 
 class NameAlreadyExists(Exception):
     pass
