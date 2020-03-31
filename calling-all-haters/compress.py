@@ -48,8 +48,11 @@ class Compress:
         else:
             data = response.get_data()
 
-        if response.mimetype not in ["application/octet-stream", "application/javascript", "application/json"] and "image" not in response.mimetype:
-            data = htmlmin.minify(data.decode(), remove_empty_space=True, reduce_boolean_attributes=True, convert_charrefs=True, remove_comments=True).encode("utf-8")
+        try:
+            if response.mimetype not in ["application/octet-stream", "application/javascript", "application/json"] and "image" not in response.mimetype:
+                data = htmlmin.minify(data.decode(), remove_empty_space=True, reduce_boolean_attributes=True, convert_charrefs=True, remove_comments=True).encode("utf-8")
+        except:
+            pass
 
         if "gzip" in accept_encoding:
             with GzipFile(mode="wb", compresslevel=6, fileobj=gzip_buffer) as gzip_file:
