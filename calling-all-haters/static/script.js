@@ -614,7 +614,7 @@ function displayTitleWithTimer() {
 setInterval(displayTitleWithTimer, 1000);
 
 function connectGame() {
-  app.ws_url = document.location.protocol == "https:" ? "wss:" : "ws:" + "//" + document.location.host + document.location.pathname;
+  app.ws_url = (document.location.protocol == "https:" ? "wss:" : "ws:") + "//" + document.location.host + document.location.pathname;
 
   app.heartbeat_interval = 0;
   app.heartbeat_counter = 0;

@@ -24,6 +24,10 @@ class WebsocketException(Exception):
     pass
 
 
+def timestamp():
+    return datetime.utcnow().timestamp()
+
+
 def encodeid(i=None):
     if not i:
         i = int(time.time() * 1000)
@@ -69,7 +73,7 @@ def create_token(user):
     else:
         _id = user
 
-    _time = int(datetime.now().timestamp())
+    _time = int(timestamp())
     _uuid1 = uuid.uuid1()
 
     _uuid1_bytes = _uuid1.int.to_bytes((_uuid1.int.bit_length() + 8) // 8, 'big', signed=True)

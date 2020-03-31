@@ -159,7 +159,7 @@ class Game:
         self.id = data.get("id", 0)
         self.encoded_id = data.get("encoded_id")
         self.settings = data.get("settings", game_defaults)
-        self.started_at = time.time()
+        self.started_at = utils.timestamp()
         self.is_live = data.get("is_live", False)
         self.game_duration = data.get("game_duration", 0)
 
@@ -275,7 +275,7 @@ class Game:
                     break
 
                 self.state = 2
-                self.timeout = time.time() + seconds_wait
+                self.timeout = utils.timestamp() + seconds_wait
                 await self.broadcast({
                     "o": 0,
                     "e": "ROUND_UPDATE",
@@ -287,7 +287,7 @@ class Game:
                 # Waiting for players to select cards
                 # game_round.active.remove(game_round.czar)
                 active_ids = [p.id for p in game_round.active]
-                while time.time() < self.timeout:
+                while utils.timestamp() < self.timeout:
                     await asyncio.sleep(1)
                     # if len(game_round.played) >= len(game_round.active) - 1:
                     if len([p for p, c in game_round.played.values() if p.id in active_ids]) >= len(game_round.active) - 1:
@@ -310,7 +310,7 @@ class Game:
                 if len(game_round.played) > 0:
                     # Prepare czar selection
                     self.state = 3
-                    self.timeout = time.time() + 60
+                    self.timeout = utils.timestamp() + 60
                     await self.broadcast({
                         "o": 0,
                         "e": "ROUND_UPDATE",
@@ -324,7 +324,7 @@ class Game:
                         game_round.winning = list(game_round.played.values())[0][0]
 
                     # Waiting fo czar to select cards
-                    while time.time() < self.timeout:
+                    while utils.timestamp() < self.timeout:
                         await asyncio.sleep(1)
                         if game_round.winning_card:
                             break
@@ -367,7 +367,7 @@ class Game:
                 "d": player_won.to_data()
             })
 
-            self.game_duration = time.time() - self.started_at
+            self.game_duration = utils.timestamp() - self.started_at
             db_entry = self.to_db()
 
             f = open("game_"+str(self.id)+".json", "w")
@@ -672,7 +672,7 @@ class Heartbeat:
     __slots__ = ['time', 'count', 'interval', 'delta', 'is_closed']
 
     def __init__(self, interval, delta=None):
-        self.time = time.time()
+        self.time = utils.timestamp()
         self.count = 0
         self.interval = interval
         self.delta = delta or int(self.interval / 2) - 0.1
@@ -683,7 +683,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 app = Quart(__name__)
 app.secret_key = "wglfULERHGGFBUPY"
 def gettime():
-    return int(time.time())
+    return int(utils.timestamp())
 app.jinja_env.globals['time'] = gettime
 Compress(app)
 
@@ -741,8 +741,8 @@ async def _game(gameid=None):
 
 async def _game_websocket_heartbeat(heartbeat):
     while not heartbeat.is_closed:
-        await asyncio.sleep((heartbeat.interval + heartbeat.delta) - (time.time() - heartbeat.time) + 0.5)
-        if (time.time() - heartbeat.time) > (heartbeat.interval + heartbeat.delta):
+        await asyncio.sleep((heartbeat.interval + heartbeat.delta) - (utils.timestamp() - heartbeat.time) + 0.5)
+        if (utils.timestamp() - heartbeat.time) > (heartbeat.interval + heartbeat.delta):
             heartbeat.is_closed = True
             await websocket.send(json.dumps({
                 "o": 3,
@@ -977,7 +977,7 @@ async def _game_websocket_receive(heartbeat, game):
             if opcode == 3:
                 # HEARTBEAT
                 heartbeat.count = response.get("d", heartbeat.count + 1)
-                heartbeat.time = time.time()
+                heartbeat.time = utils.timestamp()
                 await websocket.send(json.dumps({
                     "o": 4,
                     "d": heartbeat.count
