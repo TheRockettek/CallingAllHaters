@@ -1061,7 +1061,12 @@ async def _api_ntp():
 
 @app.route("/api/discovery")
 async def _api_discovery():
-    return jsonify([game.to_data(discovery=True) for game in games.values()])
+    _games = []
+    now = utils.timestamp()
+    for game in games.values():
+        if not ((now - game.started_at) > 900 and game.started):
+            _games.append(game.to_data(discovery=True))
+    return jsonify(_games)
 
 
 @app.route("/api/leaderboards")
