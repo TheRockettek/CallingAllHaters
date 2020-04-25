@@ -90,14 +90,18 @@ function createGame() {
     }
   })
 }
-function joinGame(id) {
+function joinGame(id, spectate) {
   if (id in games) {
     if (!(games[id].settings.allow_guests || !get_key(data, "is_guest", true))) {
       displayError("You cannot join this game", "This group is for logged in users only");
       return;
     }
   };
-  document.location.href += "game/" + id;
+  if (spectate) {
+    document.location.href += "spectate/" + id;
+  } else {
+    document.location.href += "game/" + id;
+  }
 }
 function retrieveLeaderboards() {
   const winList = $("#leaderboards-wins");
@@ -152,10 +156,10 @@ function discoverGames(is_guest) {
         if (_data.has_custom_deck) {
           _data.decks.concat("Custom");
         }
+
         var joinButton = $("<a>").append(
           $("<button>").html(`Join ${(_data.settings.allow_guests || !is_guest) ? "" : "<img class=\'lock\' src=\'/static/lock-alert.svg\'>"}`)
         )
-
         joinButton.attr("game-id", _data.encoded_id);
         if (!(_data.settings.allow_guests || !is_guest)) {
           joinButton.attr("data-tooltip", "This group is for logged in users only");
@@ -164,7 +168,21 @@ function discoverGames(is_guest) {
           joinButton.attr("data-tooltip", "This game has password protection");
         }
         joinButton.on("click", _ => {
-          joinGame(_.currentTarget.attributes['game-id'].value)
+          joinGame(_.currentTarget.attributes['game-id'].value, false)
+        })
+
+        var spectateButton = $("<a>").append(
+          $("<button>").html("Spectate")
+        )
+        spectateButton.attr("game-id", _data.encoded_id);
+        if (!(_data.settings.allow_guests || !is_guest)) {
+          spectateButton.attr("data-tooltip", "This group is for logged in users only");
+        }
+        if (_data.settings.password) {
+          spectateButton.attr("data-tooltip", "This game has password protection");
+        }
+        spectateButton.on("click", _ => {
+          joinGame(_.currentTarget.attributes['game-id'].value, true)
         })
 
         display_names = []
@@ -183,9 +201,7 @@ function discoverGames(is_guest) {
           )
         ).append(
           $("<div>").addClass("game-buttons").append(
-            $("<a>").append(
-              $("<button>").text("Spectate")
-            )
+            spectateButton
           ).append(
             joinButton
           )
@@ -628,6 +644,7 @@ function connectGame() {
 
   app.host = undefined;
   app.is_host = false;
+  app.is_spectator = document.location.pathname.startsWith("/spectate");
   app.players = {};
   app.settings = {};
   app.state = -1;
@@ -701,6 +718,7 @@ function connectGame() {
         "d": {
           "t": app.token,
           "p": app.password,
+          "spec": app.is_spectator,
         }
       }));
     });

@@ -735,9 +735,9 @@ async def _index():
 
 @app.route("/game")
 @app.route("/game/<gameid>")
+@app.route("/spectate/<gameid>")
 async def _game(gameid=None):
     return await render_template("game.html", session=session)
-
 
 async def _game_websocket_heartbeat(heartbeat):
     while not heartbeat.is_closed:
@@ -751,7 +751,7 @@ async def _game_websocket_heartbeat(heartbeat):
             return
 
 
-async def _game_websocket_receive(heartbeat, game):
+async def _game_websocket_receive(heartbeat, game, is_spectator):
     try:
         authenticated = False
         player = None
@@ -937,6 +937,9 @@ async def _game_websocket_receive(heartbeat, game):
                 token = data.get("t")
                 if token is None:
                     continue
+                spectating = data.get("spec")
+                if spectating is None:
+                    continue
                 if (game.settings.get('player_limit', 0) or 0) > 0 and len(game.players) >= (game.settings.get('player_limit', 0) or 0):
                     return await websocket.send(json.dumps({
                         "o": 3,
@@ -964,7 +967,8 @@ async def _game_websocket_receive(heartbeat, game):
                         player = _player
                         break
                 else:
-                    player = Player(game, user, copy.copy(websocket), {"is_host": user.id == game.host.id})
+                    print("spectator?", is_spectator)
+                    player = Player(game, user, copy.copy(websocket), {"is_host": user.id == game.host.id, "is_spectator": is_spectator})
                     game.players.append(player)
                     await game.broadcast({
                         "o": 0,
@@ -1009,7 +1013,39 @@ async def _game_websocket(gameid=None):
     }))
 
     fut = [
-        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_receive)(heartbeat, game)),
+        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_receive)(heartbeat, game, False)),
+        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_heartbeat)(heartbeat))
+    ]
+    await asyncio.wait(fut, return_when=asyncio.FIRST_COMPLETED)
+    logging.debug("Cleaning futures")
+    for future in fut:
+        future.cancel()
+        
+
+@app.websocket("/spectate/<gameid>")
+async def _game_spectate_websocket(gameid=None):
+    if gameid is None:
+        return await websocket.send(json.dumps({
+            "o": 3,
+            "m": "Missing gameid"
+        }))
+    if gameid not in games:
+        return await websocket.send(json.dumps({
+            "o": 3,
+            "m": "This game does not exist or is not live"
+        }))
+
+    heartbeat = Heartbeat(15)
+    game = games[gameid]
+
+    await websocket.accept()
+    await websocket.send(json.dumps({
+        "o": 1,
+        "d": heartbeat.interval
+    }))
+
+    fut = [
+        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_receive)(heartbeat, game, True)),
         asyncio.ensure_future(copy_current_websocket_context(_game_websocket_heartbeat)(heartbeat))
     ]
     await asyncio.wait(fut, return_when=asyncio.FIRST_COMPLETED)
