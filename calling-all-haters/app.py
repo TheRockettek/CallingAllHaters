@@ -9,7 +9,6 @@ import os
 import random
 import sqlite3
 import socket
-import time
 import traceback
 import uuid
 from datetime import datetime
@@ -241,7 +240,7 @@ class Game:
                 self.czar_index += 1
 
                 seconds_wait = int(self.settings['timer_limit'] * 60)
-                game_round.active = [player for player in self.players if player.active]
+                game_round.active = [player for player in self.players if player.active and not player.is_spectator]
 
                 if len(game_round.active) < 2:
                     await self.destroy("Not enough players to continue",)
@@ -259,8 +258,9 @@ class Game:
                 })
 
                 for player in self.players:
-                    player.played_card = None
-                    player.fill_deck(10, list(set([a for b in [[c.text for c in p.deck] for p in self.players] for a in b])))
+                    if not player.is_spectator:
+                        player.played_card = None
+                        player.fill_deck(10, list(set([a for b in [[c.text for c in p.deck] for p in self.players] for a in b])))
                     try:
                         await player.websocket.send(json.dumps({
                             "o": 0,
@@ -370,7 +370,7 @@ class Game:
             self.game_duration = utils.timestamp() - self.started_at
             db_entry = self.to_db()
 
-            f = open("game_"+str(self.id)+".json", "w")
+            f = open("game_" + str(self.id) + ".json", "w")
             json.dump(db_entry, f)
             f.close()
 
@@ -379,7 +379,7 @@ class Game:
                 (self.id, json.dumps(db_entry['rounds']), self.started_at, self.game_duration, json.dumps(db_entry['players']))
             )
             for player in self.players:
-                if not player.is_guest:
+                if not player.is_guest and not player.is_spectator:
                     if player_won.id == player.user.id:
                         player.user.total_wins += 1
                     player.user.total_points += player.points
@@ -404,7 +404,7 @@ class Game:
     async def broadcast(self, data):
         if not isinstance(data, str):
             data = json.dumps(data)
-        for player in [p for p in self.players if p.active]:
+        for player in [p for p in self.players if p.active or p.is_spectator]:
             try:
                 await player.websocket.send(data)
             except BaseException:
@@ -682,8 +682,12 @@ class Heartbeat:
 logging.getLogger().setLevel(logging.DEBUG)
 app = Quart(__name__)
 app.secret_key = "wglfULERHGGFBUPY"
+
+
 def gettime():
     return int(utils.timestamp())
+
+
 app.jinja_env.globals['time'] = gettime
 Compress(app)
 
@@ -739,16 +743,30 @@ async def _index():
 async def _game(gameid=None):
     return await render_template("game.html", session=session)
 
-async def _game_websocket_heartbeat(heartbeat):
-    while not heartbeat.is_closed:
-        await asyncio.sleep((heartbeat.interval + heartbeat.delta) - (utils.timestamp() - heartbeat.time) + 0.5)
-        if (utils.timestamp() - heartbeat.time) > (heartbeat.interval + heartbeat.delta):
-            heartbeat.is_closed = True
-            await websocket.send(json.dumps({
-                "o": 3,
-                "m": "Failed heartbeat"
-            }))
-            return
+
+async def _game_websocket_heartbeat(heartbeat, game):
+    try:
+        _id = session.get("data", {}).get("id", None)
+        while not heartbeat.is_closed:
+            await asyncio.sleep((heartbeat.interval + heartbeat.delta) - (utils.timestamp() - heartbeat.time) + 0.5)
+            if (utils.timestamp() - heartbeat.time) > (heartbeat.interval + heartbeat.delta):
+                heartbeat.is_closed = True
+                await websocket.send(json.dumps({
+                    "o": 3,
+                    "m": "Failed heartbeat"
+                }))
+
+                for player in game.players:
+                    if player.id == _id:
+                        game.players.remove(player)
+                        await game.broadcast({
+                            "o": 0,
+                            "e": "PLAYER_REMOVE",
+                            "d": player.to_data(True)
+                        })
+                return
+    except Exception:
+        traceback.print_exc()
 
 
 async def _game_websocket_receive(heartbeat, game, is_spectator):
@@ -809,7 +827,7 @@ async def _game_websocket_receive(heartbeat, game, is_spectator):
                                 "m": f"Not enough white cards. You must have atleast 200, you currently have {whites}"
                             }))
                             continue
-                        if len(game.players) < 2:
+                        if len([p for p in game.players if not p.is_spectator]) < 2:
                             await player.websocket.send(json.dumps({
                                 "o": 3,
                                 "t": 2,
@@ -955,7 +973,14 @@ async def _game_websocket_receive(heartbeat, game, is_spectator):
                         }))
                 authorized, user = await validate_token(token)
                 if authorized is False:
-                    user = User(session.get('data', {'name': 'Guest ' + utils.generateHex()}), True)
+                    guestdata = session.get('data')
+                    if guestdata:
+                        user = User(session.get('data'), True)
+                    else:
+                        return await websocket.send(json.dumps({
+                            "o": 3,
+                            "m": "You are not logged in or a guest"
+                        }))
                 if user.is_guest and not game.settings['allow_guests']:
                     return await websocket.send(json.dumps({
                         "o": 3,
@@ -991,37 +1016,6 @@ async def _game_websocket_receive(heartbeat, game, is_spectator):
 
 
 @app.websocket("/game/<gameid>")
-async def _game_websocket(gameid=None):
-    if gameid is None:
-        return await websocket.send(json.dumps({
-            "o": 3,
-            "m": "Missing gameid"
-        }))
-    if gameid not in games:
-        return await websocket.send(json.dumps({
-            "o": 3,
-            "m": "This game does not exist or is not live"
-        }))
-
-    heartbeat = Heartbeat(15)
-    game = games[gameid]
-
-    await websocket.accept()
-    await websocket.send(json.dumps({
-        "o": 1,
-        "d": heartbeat.interval
-    }))
-
-    fut = [
-        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_receive)(heartbeat, game, False)),
-        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_heartbeat)(heartbeat))
-    ]
-    await asyncio.wait(fut, return_when=asyncio.FIRST_COMPLETED)
-    logging.debug("Cleaning futures")
-    for future in fut:
-        future.cancel()
-        
-
 @app.websocket("/spectate/<gameid>")
 async def _game_spectate_websocket(gameid=None):
     if gameid is None:
@@ -1044,9 +1038,11 @@ async def _game_spectate_websocket(gameid=None):
         "d": heartbeat.interval
     }))
 
+    spectating = websocket.path.startswith("/spectate")
+
     fut = [
-        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_receive)(heartbeat, game, True)),
-        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_heartbeat)(heartbeat))
+        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_receive)(heartbeat, game, spectating)),
+        asyncio.ensure_future(copy_current_websocket_context(_game_websocket_heartbeat)(heartbeat, game))
     ]
     await asyncio.wait(fut, return_when=asyncio.FIRST_COMPLETED)
     logging.debug("Cleaning futures")
@@ -1062,7 +1058,9 @@ async def _leaderboards():
 @app.route("/games")
 async def _games():
     resp, user = await can_authenticate(allow_guests=True)
-    print(resp, user)
+    if not resp:
+        user = User({}, True)
+
     return jsonify(user.to_data())
 
 
@@ -1079,6 +1077,7 @@ async def _games_view(id):
         return jsonify({"success": True, "results": round_data})
     else:
         return jsonify({"success": False, "results": None})
+
 
 @app.route("/logout")
 async def _logout():
@@ -1228,7 +1227,6 @@ async def _api_game_id(id):
     cur.execute('SELECT * FROM USERS WHERE id = ?', (_id,))
     res = utils.sanitize_sqlite(cur, cur.fetchone(), isone=True)
     return jsonify(res)
-
 
 
 @app.route("/api/creategame")

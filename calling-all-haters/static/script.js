@@ -91,6 +91,10 @@ function createGame() {
   })
 }
 function joinGame(id, spectate) {
+  if (data.id == undefined) {
+    displayError("You cannot join this game", "You must login or select a guest username to join games");
+    return;
+  }
   if (id in games) {
     if (!(games[id].settings.allow_guests || !get_key(data, "is_guest", true))) {
       displayError("You cannot join this game", "This group is for logged in users only");
@@ -158,7 +162,7 @@ function discoverGames(is_guest) {
         }
 
         var joinButton = $("<a>").append(
-          $("<button>").html(`Join ${(_data.settings.allow_guests || !is_guest) ? "" : "<img class=\'lock\' src=\'/static/lock-alert.svg\'>"}`)
+          $("<button>").html(`Join ${(data.id != undefined && (_data.settings.allow_guests || !is_guest)) ? "" : "<img class=\'lock\' src=\'/static/lock-alert.svg\'>"}`)
         )
         joinButton.attr("game-id", _data.encoded_id);
         if (!(_data.settings.allow_guests || !is_guest)) {
@@ -167,12 +171,15 @@ function discoverGames(is_guest) {
         if (_data.settings.password) {
           joinButton.attr("data-tooltip", "This game has password protection");
         }
+        if (data.id == undefined) {
+          joinButton.attr("data-tooltip", "You must log in or play as a guest to play games");
+        }
         joinButton.on("click", _ => {
           joinGame(_.currentTarget.attributes['game-id'].value, false)
         })
 
         var spectateButton = $("<a>").append(
-          $("<button>").html("Spectate")
+          $("<button>").html(`Spectate ${(data.id != undefined && (_data.settings.allow_guests || !is_guest)) ? "" : "<img class=\'lock\' src=\'/static/lock-alert.svg\'>"}`)
         )
         spectateButton.attr("game-id", _data.encoded_id);
         if (!(_data.settings.allow_guests || !is_guest)) {
@@ -180,6 +187,9 @@ function discoverGames(is_guest) {
         }
         if (_data.settings.password) {
           spectateButton.attr("data-tooltip", "This game has password protection");
+        }
+        if (data.id == undefined) {
+          spectateButton.attr("data-tooltip", "You must log in or play as a guest to play games");
         }
         spectateButton.on("click", _ => {
           joinGame(_.currentTarget.attributes['game-id'].value, true)
@@ -327,17 +337,24 @@ function renderGamePackList() {
 }
 function displayBoard() {
   if (app.state == 0) {
-    $("#scoreboard").text(`Players (${Object.keys(app.players).length}):`);
     var scoreboard = $(".scoreboard");
     scoreboard.empty();
+    var player_count = 0;
     Object.values(app.players).forEach(p => {
       var container = $("<div>");
       $("<span>").text(p.display_name).appendTo(container);
       if (p.is_host) {
         $("<img>").addClass("check").addClass("host").attr("src", "/static/crown.svg").appendTo(container);
       }
+      if (p.is_spectator) {
+        $("<img>").addClass("check").addClass("host").attr("src", "/static/ghost.svg").appendTo(container);
+      } else {
+        player_count += 1;
+      }
       container.appendTo(scoreboard);
     });
+    $("#scoreboard").text(`Players (${player_count}):`);
+
     if (app.gamepack_cache == undefined) {
       $.ajax({
         url: "/api/packs/default",
@@ -374,7 +391,7 @@ function displayBoard() {
           console.warn(`Game pack ${p} is not in cache`);
         }
       })
-      $("#gamepack").text(`Game Packs: (${white} white, ${black} black and ${blank} black cards)`);
+      $("#gamepack").text(`Game Packs: (${white} white, ${black} black and ${blank} blank cards)`);
     }
   } else {
     renderDeck();
@@ -388,6 +405,9 @@ function displayBoard() {
       $("<span>").text(p.display_name).appendTo(container);
       if (p.is_host) {
         $("<img>").addClass("check").addClass("selected").attr("src", "/static/crown.svg").appendTo(container);
+      }
+      if (p.is_spectator) {
+        $("<img>").addClass("check").addClass("host").attr("src", "/static/ghost.svg").appendTo(container);
       }
       container.appendTo(scoreboard);
     })
@@ -442,14 +462,16 @@ function displayBlackcard(card, picked, convert=false) {
 
     var labels = $("#selection-buttons");
     labels.empty();
-    $("<h5>").append(
-      "Select "
-    ).append(
-      $("<b>").text(cards_selected)
-    ).append(` card${cards_selected == 1 ? '' : 's'} then confirm your selection.`).appendTo(labels);
-    $("<button>").on("click", _ => {
-      submitSelection(); return false;
-    }).addClass("button").text("Confirm Selection").attr("id", "confirmButton").appendTo(labels);
+    if (!data.is_spectator) {
+      $("<h5>").append(
+        "Select "
+      ).append(
+        $("<b>").text(cards_selected)
+      ).append(` card${cards_selected == 1 ? '' : 's'} then confirm your selection.`).appendTo(labels);
+      $("<button>").on("click", _ => {
+        submitSelection(); return false;
+      }).addClass("button").text("Confirm Selection").attr("id", "confirmButton").appendTo(labels);
+    }
     $(".black-card").empty().append(card_content).append(card_information);
   }
 }
@@ -513,7 +535,9 @@ function renderDeck() {
       } else {
         var card_selection = $(".card-selection");
         card_selection.empty();
-        $("<h5>").text("Select from your hand:").appendTo(card_selection);
+        if (!data.is_spectator) {
+          $("<h5>").text("Select from your hand:").appendTo(card_selection);
+        }
         app.players[data.id].deck.forEach(c => {
           var img = $("<img>").addClass("check").attr("src", "/static/check.svg");
           if (app.played.includes(c.identifier)) {
