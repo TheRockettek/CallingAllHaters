@@ -5,11 +5,12 @@ import uuid
 import base64
 import hmac
 import time
+import math
 from datetime import datetime
 
 # Config for website
 HOST = "0.0.0.0"
-PORT = 42069
+PORT = 80
 DEBUG = True
 
 
@@ -107,3 +108,9 @@ def parse_token(token):
         return True, token_user_id, _session_hmac
     else:
         return False, None, None
+
+
+def display_time(seconds):
+    _s = math.floor(seconds % 60)
+    _m = math.floor((seconds - _s) / 60)
+    return f"{_m}m {_s}s"

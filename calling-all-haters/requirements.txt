@@ -1,0 +1,4 @@
+quart
+htmlmin
+cx_Freeze
+beautifulsoup4

@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 
 # Dependencies are automatically detected, but it might need fine tuning.
 build_exe_options = {"packages": ["asyncio", "jinja2", "copy", "functools", "hashlib", "htmlmin", "hmac", "json", "logging", "os", "random", "sqlite3", "socket", "time", "traceback", "uuid", "datetime", "enum", "quart", "utils", "compress"]}
-
+build_exe_options = {"packages": []}
 # GUI applications require a different base on Windows (the default is for a
 # console application).
 base = None

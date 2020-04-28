@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block container %}
+<div class="container">
+    <h5>Previous games ({{ len(games) }}):</h5>
+    {% for game in games %}
+    <a href="/games/{{ game }}"><button class="white-card">
+        <span class="card-content">Game {{ game }}</span>
+    </button></a>
+    {% endfor %}
+</div>
+{% endblock %}

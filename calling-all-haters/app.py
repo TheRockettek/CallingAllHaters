@@ -370,10 +370,6 @@ class Game:
             self.game_duration = utils.timestamp() - self.started_at
             db_entry = self.to_db()
 
-            f = open("game_" + str(self.id) + ".json", "w")
-            json.dump(db_entry, f)
-            f.close()
-
             db.execute(
                 "INSERT INTO GAMES (id, rounds, started_at, game_duration, players) VALUES(?, ?, ?, ?, ?)",
                 (self.id, json.dumps(db_entry['rounds']), self.started_at, self.game_duration, json.dumps(db_entry['players']))
@@ -689,6 +685,10 @@ def gettime():
 
 
 app.jinja_env.globals['time'] = gettime
+app.jinja_env.globals['len'] = len
+app.jinja_env.globals['encodeid'] = utils.encodeid
+app.jinja_env.globals['displayTime'] = utils.display_time
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 Compress(app)
 
 
@@ -758,12 +758,13 @@ async def _game_websocket_heartbeat(heartbeat, game):
 
                 for player in game.players:
                     if player.id == _id:
-                        game.players.remove(player)
+                        player.active = False
                         await game.broadcast({
                             "o": 0,
                             "e": "PLAYER_REMOVE",
                             "d": player.to_data(True)
                         })
+                        break
                 return
     except Exception:
         traceback.print_exc()
@@ -827,11 +828,11 @@ async def _game_websocket_receive(heartbeat, game, is_spectator):
                                 "m": f"Not enough white cards. You must have atleast 200, you currently have {whites}"
                             }))
                             continue
-                        if len([p for p in game.players if not p.is_spectator]) < 2:
+                        if len([p for p in game.players if not p.is_spectator]) < 3:
                             await player.websocket.send(json.dumps({
                                 "o": 3,
                                 "t": 2,
-                                "m": f"Not enough players. You need atleast 2 players to start the game"
+                                "m": f"Not enough players. You need atleast 3 players to start the game"
                             }))
                             continue
                         game.started = True
@@ -992,7 +993,6 @@ async def _game_websocket_receive(heartbeat, game, is_spectator):
                         player = _player
                         break
                 else:
-                    print("spectator?", is_spectator)
                     player = Player(game, user, copy.copy(websocket), {"is_host": user.id == game.host.id, "is_spectator": is_spectator})
                     game.players.append(player)
                     await game.broadcast({
@@ -1061,7 +1061,8 @@ async def _games():
     if not resp:
         user = User({}, True)
 
-    return jsonify(user.to_data())
+    games = [utils.encodeid(i)[0] for i in user.games]
+    return await render_template("games.html", session=session, games=games)
 
 
 @app.route("/games/<id>")
@@ -1074,9 +1075,9 @@ async def _games_view(id):
         round_data = utils.sanitize_sqlite(cur, fetches[0], isone=True)
         round_data['players'] = json.loads(round_data['players'])
         round_data['rounds'] = json.loads(round_data['rounds'])
-        return jsonify({"success": True, "results": round_data})
+        return await render_template("games_view.html", data=round_data)
     else:
-        return jsonify({"success": False, "results": None})
+        return await render_template("games_view.html", data=None)
 
 
 @app.route("/logout")
@@ -1097,10 +1098,20 @@ async def _api_ntp():
 @app.route("/api/discovery")
 async def _api_discovery():
     _games = []
+    _destroy = []
     now = utils.timestamp()
-    for game in games.values():
-        if not ((now - game.started_at) > 900 and game.started):
+    for _id, game in games.items():
+        if (now - game.started_at) > 8 and not game.started:
+            # If they are afk for more than 15 in lobby then destroy the game
+            # I could check in a task but checking during discovery would suffice
+            _destroy.append(_id)
+        else:
             _games.append(game.to_data(discovery=True))
+
+    # Destroy games after iteraction so the game list does not change
+    for _id in _destroy:
+        if _id in games:
+            await games[_id].destroy()
     return jsonify(_games)
 
 

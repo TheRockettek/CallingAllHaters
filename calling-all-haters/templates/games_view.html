@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block container %}
+<div class="game-status">
+    <div class="col-1 col-s-4">
+        <span>Game:</span> <span>{{ encodeid(data['id'])[0] }}</span>
+    </div>
+    <div class="col-1 col-s-4">
+        <span>Players:</span> <span>{{ len(data['players']) }}</span>
+    </div>
+    <div class="col-1 col-s-4">
+        <span>Rounds:</span> <span>{{ len(data['rounds']) }}</span>
+    </div>
+    <div class="col-1 col-s-4">
+        <span>Game Duration:</span> <span>{{ displayTime(data['game_duration']) }}</span>
+    </div>
+</div>
+<div class="container">
+    <h5>Game {{ encodeid(data['id'])[0] }}</h5>
+
+    <h5>Final score:</h5>
+    <div class="scoreboard">
+        {% for player in data['players'] %}
+            {% if not player['is_spectator'] %}
+            <div>
+                <span class="scoreboard-score">{{ player['points'] }}</span>
+                <span>{{ player['name'] }}</span>
+                {% if player['is_host'] %}
+                <img class="check host" src="/static/crown.svg">
+                {% endif %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% for round in data['rounds'] %}
+        <h5>Round {{ round['number'] }}</h5>
+        <div class="black-card">
+            <div class="card-content">{{ round['black_card']['text'] }}</div>
+        </div>
+        {% for uid, cardstack in round['played'] %}
+            {% if uid == round.get('winning',{})['id'] %}
+            <button class="card-stack won">
+            {% else %}
+            <button class="card-stack">
+            {% endif %}
+            <div>
+                {% for card in cardstack %}
+                <div class="white-card-stack">
+                    <span>{{ card['text'] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            </button>
+        {% endfor %}
+    {% endfor %}
+
+</div>
+{% endblock %}
