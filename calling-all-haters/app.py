@@ -1101,7 +1101,7 @@ async def _api_discovery():
     _destroy = []
     now = utils.timestamp()
     for _id, game in games.items():
-        if (now - game.started_at) > 8 and not game.started:
+        if (now - game.started_at) > 900 and not game.started:
             # If they are afk for more than 15 in lobby then destroy the game
             # I could check in a task but checking during discovery would suffice
             _destroy.append(_id)
