@@ -1,2 +1,2 @@
 htmlmin==0.1.12
-Quart==0.10.0
+Quart==0.19.7
